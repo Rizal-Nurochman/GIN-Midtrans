@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"github.com/Rizal-Nurochman/config"
+	"github.com/Rizal-Nurochman/pkg/constants"
 	"github.com/samber/do"
 	"gorm.io/gorm"
 )
