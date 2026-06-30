@@ -44,7 +44,7 @@ func main() {
 	server := gin.Default()
 	server.Use(middlewares.CORSMiddleware())
 
-	v1 := server.Group("v1")
+	v1 := server.Group("api/v1")
 	{
 		auth.RegisterRoutes(v1, injector)
 	}
