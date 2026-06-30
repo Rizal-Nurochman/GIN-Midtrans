@@ -1,7 +1,11 @@
-package service
+﻿package service
 
 import (
 	"context"
+	"crypto/rand"
+	"fmt"
+	"math/big"
+	"time"
 
 	"github.com/Rizal-Nurochman/database/entities"
 	"github.com/Rizal-Nurochman/modules/auth/dto"
@@ -172,41 +176,56 @@ func (s *authService) SendVerificationEmail(ctx context.Context, req userDto.Sen
 		return userDto.ErrAccountAlreadyVerified
 	}
 
-	verificationToken := s.jwtService.GenerateAccessToken(user.ID.String(), "verification")
+	// ponytail: crypto/rand for unguessable OTP
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return err
+	}
+	otp := fmt.Sprintf("%06d", n.Int64())
+	expiry := time.Now().Add(15 * time.Minute)
+
+	if err := s.db.WithContext(ctx).Model(&user).Updates(map[string]any{
+		"verification_code":   otp,
+		"verification_expiry": expiry,
+	}).Error; err != nil {
+		return err
+	}
 
 	subject := "Email Verification"
-	body := "Please verify your email using this token: " + verificationToken
-
+	body := "Your verification code is: <b>" + otp + "</b>. It expires in 15 minutes."
 	return utils.SendMail(user.Email, subject, body)
 }
 
 func (s *authService) VerifyEmail(ctx context.Context, req userDto.VerifyEmailRequest) (userDto.VerifyEmailResponse, error) {
-	token, err := s.jwtService.ValidateToken(req.Token)
-	if err != nil || !token.Valid {
+	user, err := s.userRepository.GetUserByEmail(ctx, s.db, req.Email)
+	if err != nil {
+		return userDto.VerifyEmailResponse{}, userDto.ErrEmailNotFound
+	}
+
+	if user.IsVerified {
+		return userDto.VerifyEmailResponse{}, userDto.ErrAccountAlreadyVerified
+	}
+
+	if user.VerificationCode != req.Code {
 		return userDto.VerifyEmailResponse{}, userDto.ErrTokenInvalid
 	}
 
-	userId, err := s.jwtService.GetUserIDByToken(req.Token)
-	if err != nil {
-		return userDto.VerifyEmailResponse{}, userDto.ErrTokenInvalid
+	if user.VerificationExpiry == nil || time.Now().After(*user.VerificationExpiry) {
+		return userDto.VerifyEmailResponse{}, userDto.ErrTokenExpired
 	}
 
-	user, err := s.userRepository.GetUserById(ctx, s.db, userId)
-	if err != nil {
-		return userDto.VerifyEmailResponse{}, userDto.ErrUserNotFound
-	}
-
-	user.IsVerified = true
-	updatedUser, err := s.userRepository.Update(ctx, s.db, user)
-	if err != nil {
+	// ponytail: map update clears zero-value string; Updates(&struct) would skip it
+	if err := s.db.WithContext(ctx).Model(&user).Updates(map[string]any{
+		"is_verified":         true,
+		"verification_code":   "",
+		"verification_expiry": nil,
+	}).Error; err != nil {
 		return userDto.VerifyEmailResponse{}, err
 	}
 
-	return userDto.VerifyEmailResponse{
-		Email:      updatedUser.Email,
-		IsVerified: updatedUser.IsVerified,
-	}, nil
+	return userDto.VerifyEmailResponse{Email: user.Email, IsVerified: true}, nil
 }
+
 
 func (s *authService) SendPasswordReset(ctx context.Context, req dto.SendPasswordResetRequest) error {
 	user, err := s.userRepository.GetUserByEmail(ctx, s.db, req.Email)

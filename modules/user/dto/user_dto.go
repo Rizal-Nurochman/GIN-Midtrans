@@ -1,4 +1,4 @@
-package dto
+﻿package dto
 
 import (
 	"errors"
@@ -84,7 +84,8 @@ type (
 	}
 
 	VerifyEmailRequest struct {
-		Token string `json:"token" form:"token" binding:"required"`
+		Email string `json:"email" form:"email" binding:"required,email"`
+		Code  string `json:"code"  form:"code"  binding:"required,len=6"`
 	}
 
 	VerifyEmailResponse struct {
