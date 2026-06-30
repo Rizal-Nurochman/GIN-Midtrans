@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "name": "Febiola",
+        "name": "Frenkie",
         "email": "{{email}}",
         "role": "user",
         "password": "{{password}}"
@@ -22,9 +22,9 @@ runtime:
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: email
-      value: fffebiolajnnh@gmail.com
+      value: dejongfrenkie26@gmail.com
     - name: password
-      value: febiolacantik123
+      value: abrisam123
 
 settings:
   encodeUrl: true

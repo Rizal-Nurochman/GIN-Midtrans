@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"time"
+
 	"github.com/Rizal-Nurochman/pkg/constants"
 	"github.com/Rizal-Nurochman/pkg/helpers"
 	"github.com/google/uuid"
@@ -13,9 +15,12 @@ type User struct {
 	Email      				string    `gorm:"size:225;uniqueIndex;not null"`
 	Password   				string    `gorm:"size:225;not null"`
 	TelpNumber 				*string   `gorm:"size:13;index"`
-	Role 							string		`gorm:"size:50;not null;default:'user"`
+	Role 							string		`gorm:"size:50;not null;default:'user'"`
 	ProfileImageUrl		*string		`gorm:"size:255"`
 	IsVerified				bool			`gorm:"default:false"`
+
+	VerificationCode   string     `gorm:"type:varchar(6)"`
+	VerificationExpiry *time.Time `gorm:"type:timestamp with time zone"`
 
 	Timestamp
 }
