@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+func RunExtension(db *gorm.DB) {
+	db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+}
+
 func SetUpDatabaseConnection() *gorm.DB {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -32,6 +36,8 @@ func SetUpDatabaseConnection() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+
+	RunExtension(db)
 
 	return db
 }

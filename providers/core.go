@@ -1,11 +1,14 @@
 package providers
 
 import (
-	"github.com/Rizal-Nurochman/config"
+	"log"
 
+	"github.com/Rizal-Nurochman/config"
+	"github.com/Rizal-Nurochman/database"
+
+	authHandler "github.com/Rizal-Nurochman/modules/auth/handler"
 	authRepo "github.com/Rizal-Nurochman/modules/auth/repository"
 	authService "github.com/Rizal-Nurochman/modules/auth/service"
-	authHandler "github.com/Rizal-Nurochman/modules/auth/handler"
 
 	"github.com/Rizal-Nurochman/modules/user/repository"
 	"github.com/Rizal-Nurochman/pkg/constants"
@@ -27,6 +30,10 @@ func RegisterDependencies(injector *do.Injector) {
 	})
 
 	db := do.MustInvokeNamed[*gorm.DB](injector, constants.DB)
+	err := database.Migrate(db)
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 	jwtService := do.MustInvokeNamed[authService.JWTService](injector, constants.JWTService)
 
 	userRepository := repository.NewUserRepository(db)

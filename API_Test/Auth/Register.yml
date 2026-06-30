@@ -22,7 +22,7 @@ runtime:
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: email
-      value: febyowl@gmail.com
+      value: fffebiolajnnh@gmail.com
     - name: password
       value: febiolacantik123
 
