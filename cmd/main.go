@@ -4,8 +4,12 @@ import (
 	"log"
 	"os"
 
+	"github.com/Rizal-Nurochman/middlewares"
+	"github.com/Rizal-Nurochman/modules/auth"
+	"github.com/Rizal-Nurochman/providers"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/do"
 )
 
 func run(server *gin.Engine) {
@@ -31,7 +35,19 @@ func run(server *gin.Engine) {
 }
 
 func main() {
+	var (
+		injector = do.New()
+	)
+
+	providers.RegisterDependencies(injector)
+
 	server := gin.Default()
+	server.Use(middlewares.CORSMiddleware())
+
+	v1 := server.Group("v1")
+	{
+		auth.RegisterRoutes(v1, injector)
+	}
 
 	run(server)
 }
